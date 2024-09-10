@@ -36,7 +36,7 @@ public class VertexCover {
                     edges.add(new int[]{Integer.parseInt(parts[0]), Integer.parseInt(parts[1])});
                 }
             }
-            return new Graph(n, edges);
+            return new Graph( edges);
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -44,7 +44,6 @@ public class VertexCover {
     }
 
     private static Result vertexCover(Graph graph, int k) {
-        int n = graph.n;
         List<int[]> edges = graph.edges;
 
         if (k < 0) {
@@ -59,7 +58,6 @@ public class VertexCover {
         int u = edge[0];
         int v = edge[1];
 
-        // Explore cases: include u, include v, or include both
         for (int vertex : new int[]{u, v}) {
             List<int[]> newEdges = new ArrayList<>();
             for (int[] e : edges) {
@@ -67,30 +65,20 @@ public class VertexCover {
                     newEdges.add(e);
                 }
             }
-            Result result = vertexCover(new Graph(n, newEdges), k - 1);
+            Result result = vertexCover(new Graph(newEdges), k - 1);
             if (result.isCoverFound) {
                 result.cover.add(0, vertex);
                 return result;
             }
         }
 
-        // Include both u and v
-        Result result = vertexCover(new Graph(n, edges.subList(1, edges.size())), k - 2);
-        if (result.isCoverFound) {
-            result.cover.add(0, u);
-            result.cover.add(1, v);
-            return result;
-        }
-
         return new Result(false, new ArrayList<>());
     }
 
     static class Graph {
-        int n;
         List<int[]> edges;
 
-        Graph(int n, List<int[]> edges) {
-            this.n = n;
+        Graph(List<int[]> edges) {
             this.edges = edges;
         }
     }
