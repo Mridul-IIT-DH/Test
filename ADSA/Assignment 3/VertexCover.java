@@ -1,26 +1,30 @@
+
 import java.io.*;
 import java.util.*;
 
 public class VertexCover {
 
-    public static void main(String[] args) {
-        if (args.length != 2) {
-            System.out.println("Usage: java VertexCover <graph_file> <parameter_k>");
-            System.exit(1);
-        }
+public static void main(String[] args) {
+    if (args.length != 2) {
+       System.out.println("Usage: java VertexCover <graph_file> <parameter_k>");
+        System.exit(1);
+    }
 
-        String graphFile = args[0];
-        int k = Integer.parseInt(args[1]);
-        Graph graph = readGraph(graphFile);
-        Result result = vertexCover(graph, k);
+    String graphFile = args[0];
+    int k = Integer.parseInt(args[1]);
+    Graph graph = readGraph(graphFile);
+    Set<List<Integer>> allCovers = new HashSet<>();
+    findAllVertexCovers(graph, k, new ArrayList<>(), allCovers);
 
-        if (result.isCoverFound) {
-            System.out.println("Yes");
-            System.out.println("Vertex Cover: " + result.cover);
-        } else {
-            System.out.println("No");
+    if (allCovers.isEmpty()) {
+        System.out.println("No vertex cover found of size at most " + k);
+    } else {
+        System.out.println("All possible vertex covers of size at most " + k + ":");
+        for (List<Integer> cover : allCovers) {
+            System.out.println(cover);
         }
     }
+}
 
     private static Graph readGraph(String filePath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
@@ -36,43 +40,52 @@ public class VertexCover {
                     edges.add(new int[]{Integer.parseInt(parts[0]), Integer.parseInt(parts[1])});
                 }
             }
-            return new Graph( edges);
+            return new Graph(edges);
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
     }
+//Mridul Chandrawanshi
+//CS24MT002
 
-    private static Result vertexCover(Graph graph, int k) {
+    private static void findAllVertexCovers(Graph graph, int k, List<Integer> currentCover, Set<List<Integer>> allCovers) {
         List<int[]> edges = graph.edges;
 
-        if (k < 0) {
-            return new Result(false, new ArrayList<>());
+        if (edges.isEmpty()) {
+            List<Integer> coverCopy = new ArrayList<>(currentCover);
+            Collections.sort(coverCopy);
+            allCovers.add(coverCopy);
+            return;
         }
 
-        if (edges.isEmpty()) {
-            return new Result(true, new ArrayList<>());
+        if (k <= 0) {
+            return;
         }
 
         int[] edge = edges.get(0);
         int u = edge[0];
         int v = edge[1];
 
-        for (int vertex : new int[]{u, v}) {
-            List<int[]> newEdges = new ArrayList<>();
-            for (int[] e : edges) {
-                if (e[0] != vertex && e[1] != vertex) {
-                    newEdges.add(e);
-                }
-            }
-            Result result = vertexCover(new Graph(newEdges), k - 1);
-            if (result.isCoverFound) {
-                result.cover.add(0, vertex);
-                return result;
+        List<int[]> newEdgesU = new ArrayList<>();
+        for (int[] e : edges) {
+            if (e[0] != u && e[1] != u) {
+                newEdgesU.add(e);
             }
         }
+        currentCover.add(u);
+        findAllVertexCovers(new Graph(newEdgesU), k - 1, currentCover, allCovers);
+        currentCover.remove(currentCover.size() - 1);
 
-        return new Result(false, new ArrayList<>());
+        List<int[]> newEdgesV = new ArrayList<>();
+        for (int[] e : edges) {
+            if (e[0] != v && e[1] != v) {
+                newEdgesV.add(e);
+            }
+        }
+        currentCover.add(v);
+        findAllVertexCovers(new Graph(newEdgesV), k - 1, currentCover, allCovers);
+        currentCover.remove(currentCover.size() - 1);
     }
 
     static class Graph {
@@ -80,16 +93,6 @@ public class VertexCover {
 
         Graph(List<int[]> edges) {
             this.edges = edges;
-        }
-    }
-
-    static class Result {
-        boolean isCoverFound;
-        List<Integer> cover;
-
-        Result(boolean isCoverFound, List<Integer> cover) {
-            this.isCoverFound = isCoverFound;
-            this.cover = cover;
         }
     }
 }
