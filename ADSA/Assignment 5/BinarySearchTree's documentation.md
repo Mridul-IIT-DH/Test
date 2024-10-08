@@ -1,341 +1,353 @@
-# Binary Search Tree (BST) Implementation in Java
+# Detailed Report on Binary Search Tree (BST) Implementation in Java
 
-This report provides a comprehensive explanation of the Java implementation of a Binary Search Tree (BST), including its key operations such as insertion, pre-order traversal, flipping the tree, and filling a flipped BST.
+## Introduction
+This report provides a comprehensive overview of a Binary Search Tree (BST) implementation in Java. The BST allows for efficient data storage and retrieval, and this particular implementation includes functionality for inserting nodes, flipping the tree, and filling it with sorted keys. Each section of the code will be discussed in detail, along with relevant examples to clarify the logic and operations performed.
 
-## Overview
+## Overview of Binary Search Tree (BST)
+A Binary Search Tree is a binary tree where each node has at most two children, referred to as the left and right child. In a BST:
+- The left child contains values less than its parent node.
+- The right child contains values greater than its parent node.
 
-A Binary Search Tree (BST) is a data structure that maintains sorted order of its elements. Each node in the BST contains a key greater than all the keys in its left subtree and less than all the keys in its right subtree.
+This structure allows for efficient searching, insertion, and deletion operations.
 
-### Code Snippet
+## Code Structure
+Here is the complete Java code for the Binary Search Tree implementation:
 
 ```java
+import java.util.*;
+
 class Node {
-    int data;
+    int val;
     Node left, right;
 
-    public Node(int item) {
-        data = item;
+    public Node(int key) {
+        val = key;
         left = right = null;
     }
 }
 
-public class BinarySearchTree {
+class BinarySearchTree {
     Node root;
 
-    // Insert operation
+    // Insert a key into the tree
     public void insert(int key) {
-        root = insertRec(root, key);
-    }
-
-    private Node insertRec(Node root, int key) {
         if (root == null) {
             root = new Node(key);
-            return root;
+        } else {
+            insertRec(root, key);
         }
-        if (key < root.data) {
-            root.left = insertRec(root.left, key);
-        } else if (key > root.data) {
-            root.right = insertRec(root.right, key);
-        }
-        return root;
     }
 
-    // Pre-order traversal
+    private void insertRec(Node currentNode, int key) {
+        if (key < currentNode.val) {
+            if (currentNode.left == null) {
+                currentNode.left = new Node(key);
+            } else {
+                insertRec(currentNode.left, key);
+            }
+        } else if (key > currentNode.val) {
+            if (currentNode.right == null) {
+                currentNode.right = new Node(key);
+            } else {
+                insertRec(currentNode.right, key);
+            }
+        }
+    }
+
+    // Pre-order Traversal (Root, Left, Right)
     public void preorderTraversal(Node node) {
         if (node != null) {
-            System.out.print(node.data + " ");
+            System.out.print(node.val + " ");
             preorderTraversal(node.left);
             preorderTraversal(node.right);
         }
     }
 
-    // Flip operation
+    // Flip the tree (swap left and right children for each node)
     public void flip(Node node) {
-        if (node == null) return;
-
-        // Swap left and right children
-        Node temp = node.left;
-        node.left = node.right;
-        node.right = temp;
-
-        flip(node.left);
-        flip(node.right);
-    }
-
-    // Fill operation that creates a new tree from the keys
-    public void fillFlippedBST(BinarySearchTree flippedBst, int[] keys) {
-        for (int key : keys) {
-            flippedBst.insert(key); // Insert into the flipped tree
+        if (node != null) {
+            Node temp = node.left;
+            node.left = node.right;
+            node.right = temp;
+            flip(node.left);
+            flip(node.right);
         }
     }
 
-    // Create a new flipped BST with the given keys
-    public BinarySearchTree createFlippedBST(int[] keys) {
-        BinarySearchTree flippedBst = new BinarySearchTree();
-        for (int key : keys) {
-            flippedBst.insert(key);
+    // Fill the flipped tree with sorted keys in in-order manner
+    public void fillInOrder(Node node, List<Integer> keys) {
+        if (node == null) {
+            return;
         }
-        flippedBst.flip(flippedBst.root); // Flip it after inserting
-        return flippedBst;
+        fillInOrder(node.left, keys);  // Traverse the left subtree
+        node.val = keys.remove(0);  // Replace the current node's value with the next sorted key
+        fillInOrder(node.right, keys);  // Traverse the right subtree
+    }
+
+    // Helper function to fill the tree after flipping
+    public void fill(List<Integer> keys) {
+        Collections.sort(keys);  // Sort the keys before filling in in-order traversal
+        fillInOrder(root, keys);
     }
 
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // 1. Take input from the user
+        System.out.print("Enter the keys (separated by space): ");
+        String userInput = scanner.nextLine();
+
+        // 2. Split the input string by spaces and convert it to a list of integers
+        String[] inputKeys = userInput.split(" ");
+        List<Integer> keys = new ArrayList<>();
+        for (String key : inputKeys) {
+            keys.add(Integer.parseInt(key));
+        }
+
+        // 3. Create a Binary Search Tree and insert the keys
         BinarySearchTree bst = new BinarySearchTree();
-
-        // Check if keys are provided as command-line arguments
-        if (args.length == 0) {
-            System.out.println("Please provide distinct keys as command-line arguments.");
-            return;
+        for (int key : keys) {
+            bst.insert(key);
         }
 
-        // Step 1: Build BST from given keys
-        int[] keys = new int[args.length];
-        for (int i = 0; i < args.length; i++) {
-            try {
-                keys[i] = Integer.parseInt(args[i]);
-                bst.insert(keys[i]);
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input: " + args[i] + " is not an integer.");
-                return;
-            }
-        }
-
-        // Step 2: Pre-order Traversal of the original BST
-        System.out.println("Pre-order Traversal of BST:");
+        // 4. Print pre-order traversal before flipping
+        System.out.println("Pre-order traversal before flipping:");
         bst.preorderTraversal(bst.root);
         System.out.println();
 
-        // Step 3: Flip the BST
+        // 5. Flip the BST
         bst.flip(bst.root);
 
-        // Step 4: Create a new flipped BST and fill it with the same keys
-        BinarySearchTree flippedBst = bst.createFlippedBST(keys);
-
-        // Display the pre-order traversal of the flipped BST
-        System.out.println("Pre-order Traversal after filling flipped BST:");
-        flippedBst.preorderTraversal(flippedBst.root);
+        // 6. Print pre-order traversal after flipping
+        System.out.println("Pre-order traversal after flipping:");
+        bst.preorderTraversal(bst.root);
         System.out.println();
+
+        // 7. Fill the flipped tree with the original keys in sorted order (in-order filling)
+        bst.fill(keys);
+
+        // 8. Print pre-order traversal after filling the flipped tree
+        System.out.println("Pre-order traversal after filling the flipped BST with sorted keys:");
+        bst.preorderTraversal(bst.root);
+        System.out.println();
+
+        scanner.close();
     }
 }
 ```
 
-### Explanation of the Code
+## Code Breakdown
 
-#### 1. Node Class
-
+### 1. Node Class
 ```java
 class Node {
-    int data;
+    int val;
     Node left, right;
 
-    public Node(int item) {
-        data = item;
+    public Node(int key) {
+        val = key;
         left = right = null;
     }
 }
 ```
-
-- **Purpose**: Represents a single node in the binary search tree.
+- **Purpose**: Represents each node in the tree.
 - **Attributes**:
-  - `data`: Holds the value of the node.
+  - `val`: Holds the value of the node.
   - `left`: Reference to the left child node.
   - `right`: Reference to the right child node.
-- **Constructor**: Initializes the node with a given integer value and sets both children to `null`.
+- **Constructor**: Initializes the node with a key and sets both children to `null`.
 
-#### 2. BinarySearchTree Class
-
+### 2. BinarySearchTree Class
+#### Attributes
 ```java
-public class BinarySearchTree {
+class BinarySearchTree {
     Node root;
+}
 ```
+- **root**: The root node of the BST.
 
-- **Purpose**: Contains the main structure and operations of the binary search tree.
-- **Attribute**:
-  - `root`: The root node of the BST.
-
-#### 3. Insert Operation
-
+#### Insertion Method
 ```java
 public void insert(int key) {
-    root = insertRec(root, key);
-}
-
-private Node insertRec(Node root, int key) {
     if (root == null) {
         root = new Node(key);
-        return root;
+    } else {
+        insertRec(root, key);
     }
-    if (key < root.data) {
-        root.left = insertRec(root.left, key);
-    } else if (key > root.data) {
-        root.right = insertRec(root.right, key);
-    }
-    return root;
 }
 ```
+- **Purpose**: Inserts a new key into the BST.
+- **Logic**:
+  - If the tree is empty, the new key becomes the root.
+  - If not, the `insertRec` method is called to find the correct position recursively.
 
-- **insert(int key)**: Public method to insert a key into the BST.
-- **insertRec(Node root, int key)**: Private recursive method to insert a key:
-  - If the current `root` is `null`, a new node is created and returned.
-  - If the key is less than the `root`'s data, it inserts the key in the left subtree.
-  - If the key is greater, it inserts it in the right subtree.
-  
-**Example**: If we insert the keys `10`, `5`, `15`, the structure becomes:
-
+##### Recursive Insert Method
+```java
+private void insertRec(Node currentNode, int key) {
+    if (key < currentNode.val) {
+        if (currentNode.left == null) {
+            currentNode.left = new Node(key);
+        } else {
+            insertRec(currentNode.left, key);
+        }
+    } else if (key > currentNode.val) {
+        if (currentNode.right == null) {
+            currentNode.right = new Node(key);
+        } else {
+            insertRec(currentNode.right, key);
+        }
+    }
+}
 ```
-    10
-   /  \
-  5   15
-```
+- **Purpose**: Helper method to insert a key recursively.
+- **Logic**:
+  - If the key is smaller than the current node's value, it moves left; if greater, it moves right.
+  - This process continues until an empty spot is found.
 
-#### 4. Pre-order Traversal
-
+#### Pre-order Traversal Method
 ```java
 public void preorderTraversal(Node node) {
     if (node != null) {
-        System.out.print(node.data + " ");
+        System.out.print(node.val + " ");
         preorderTraversal(node.left);
         preorderTraversal(node.right);
     }
 }
 ```
+- **Purpose**: Displays the tree in pre-order (Root, Left, Right).
+- **Logic**: Recursively visits the root, then the left subtree, followed by the right subtree.
 
-- **Purpose**: Performs a pre-order traversal of the BST (Node -> Left -> Right).
-- **Example Output**: For the tree shown above, pre-order traversal would output `10 5 15`.
-
-#### 5. Flip Operation
-
+#### Flip Method
 ```java
 public void flip(Node node) {
-    if (node == null) return;
-
-    // Swap left and right children
-    Node temp = node.left;
-    node.left = node.right;
-    node.right = temp;
-
-    flip(node.left);
-    flip(node.right);
-}
-```
-
-- **Purpose**: Flips the BST such that all left children become right children and vice versa.
-- **Example**: For a tree:
-```
-    10
-   /  \
-  5   15
-```
-After flipping, it becomes:
-```
-    10
-   /  \
-  15   5
-```
-
-#### 6. Fill Operation for Flipped BST
-
-```java
-public void fillFlippedBST(BinarySearchTree flippedBst, int[] keys) {
-    for (int key : keys) {
-        flippedBst.insert(key); // Insert into the flipped tree
+    if (node != null) {
+        Node temp = node.left;
+        node.left = node.right;
+        node.right = temp;
+        flip(node.left);
+        flip(node.right);
     }
 }
 ```
+- **Purpose**: Swaps the left and right children of every node in the tree.
+- **Logic**: Recursively flips the children until all nodes are processed.
 
-- **Purpose**: Populates the provided `flippedBst` with keys from the given array.
-  
-**Example Usage**: This method can be called after creating a new `BinarySearchTree` object to fill it with values.
-
-#### 7. Create a Flipped BST
-
+#### Fill Method
 ```java
-public BinarySearchTree createFlippedBST(int[] keys) {
-    BinarySearchTree flippedBst = new BinarySearchTree();
-    for (int key : keys) {
-        flippedBst.insert(key);
-    }
-    flippedBst.flip(flippedBst.root); // Flip it after inserting
-    return flippedBst;
+public void fill(List<Integer> keys) {
+    Collections.sort(keys);  // Sort the keys before filling in in-order traversal
+    fillInOrder(root, keys);
 }
 ```
+- **Purpose**: Fills the flipped tree with sorted keys.
+- **Logic**: Sorts the list of keys and then calls `fillInOrder`.
 
-- **Purpose**: Creates a new BST, fills it with the provided keys, and flips it to ensure the structure is correct after insertion.
-  
-**Example**: If we create a flipped BST from `10, 5, 15`, it will be:
-```
-    10
-   /  \
-  15   5
-```
-
-#### 8. Main Method
-
+##### In-order Filling Method
 ```java
-public static void main(String[] args) {
-    BinarySearchTree bst = new BinarySearchTree();
-
-    // Check if keys are provided as command-line arguments
-    if (args.length == 0) {
-        System.out.println("Please provide distinct keys as command-line arguments.");
+public void fillInOrder(Node node, List<Integer> keys) {
+    if (node == null) {
         return;
     }
+    fillInOrder(node.left, keys);  // Traverse the left subtree
+    node.val = keys.remove(0);  // Replace the current node's value with the next sorted key
+    fillInOrder(node.right, keys);  // Traverse the right subtree
+}
+```
+- **Purpose**: Fills the tree in in-order (Left, Root, Right) with sorted keys.
+- **Logic**: Recursively visits each node, replacing its value with the next key from the sorted list.
 
-    // Step 1: Build BST from given keys
-    int[] keys = new int[args.length];
-    for (int i = 0; i < args.length; i++) {
-        try {
-            keys[i] = Integer.parseInt(args[i]);
-            bst.insert(keys[i]);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input: " + args[i] + " is not an integer.");
-            return;
-        }
+### 3. Main Method
+```java
+public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+
+    // 1. Take input from the user
+    System.out.print("Enter the keys (separated by space): ");
+    String userInput = scanner.nextLine();
+
+    // 2. Split the input string by spaces and convert it to a list of integers
+    String[] inputKeys = userInput.split(" ");
+    List<Integer> keys = new ArrayList<>();
+    for (String key : inputKeys) {
+        keys.add(Integer.parseInt(key));
     }
 
-    // Step 2: Pre-order Traversal of the original BST
-    System.out.println("Pre-order Traversal of BST:");
+    // 3. Create a Binary Search Tree and insert the keys
+    BinarySearchTree bst = new BinarySearchTree();
+    for (int key : keys) {
+        bst.insert(key);
+    }
+
+    // 4. Print pre-order traversal before flipping
+    System.out.println("Pre-order traversal before flipping:");
     bst.preorderTraversal(bst.root);
     System.out.println();
 
-    // Step 3: Flip the BST
+    // 5. Flip the BST
     bst.flip(bst.root);
 
-    // Step 4: Create a new flipped BST and fill it with the same keys
-    BinarySearchTree flippedBst = bst.createFlippedBST(keys);
+    // 6. Print pre-order traversal after flipping
+    System
 
-    // Display
-
- the pre-order traversal of the flipped BST
-    System.out.println("Pre-order Traversal after filling flipped BST:");
-    flippedBst.preorderTraversal(flippedBst.root);
+.out.println("Pre-order traversal after flipping:");
+    bst.preorderTraversal(bst.root);
     System.out.println();
+
+    // 7. Fill the flipped tree with the original keys in sorted order (in-order filling)
+    bst.fill(keys);
+
+    // 8. Print pre-order traversal after filling the flipped tree
+    System.out.println("Pre-order traversal after filling the flipped BST with sorted keys:");
+    bst.preorderTraversal(bst.root);
+    System.out.println();
+
+    scanner.close();
 }
 ```
-
-- **Input Handling**: Checks if command-line arguments (keys) are provided. If not, it prompts the user.
-- **Building the Original BST**: Iterates through the command-line arguments, parses integers, and inserts them into the BST.
-- **Pre-order Traversal**: Displays the structure of the original BST.
-- **Flipping the BST**: Flips the original BST structure.
-- **Creating Flipped BST**: Calls the `createFlippedBST` method to build a new flipped BST and displays its pre-order traversal.
+- **Purpose**: The main function drives the program.
+- **Steps**:
+  1. **Input**: Prompts the user to enter keys for the BST.
+  2. **Parsing**: Splits the input string into individual keys and converts them to integers.
+  3. **Insertion**: Inserts each key into the BST.
+  4. **Traversal**: Prints the pre-order traversal before and after flipping the tree.
+  5. **Flipping**: Calls the flip method on the tree.
+  6. **Filling**: Fills the flipped tree with sorted keys and prints the final traversal.
 
 ### Example Usage
+When the user runs the program and inputs the keys "5 3 7 2 4 6 8", the following operations occur:
 
-To run the program, compile it and provide distinct integers as command-line arguments. For example:
-
-```bash
-java BinarySearchTree 10 5 3 7 15 13 17
+1. **Insertion**: The keys are inserted into the BST, resulting in the structure:
+```
+        5
+      /   \
+     3     7
+    / \   / \
+   2   4 6   8
 ```
 
-### Expected Output
+2. **Pre-order Traversal Before Flipping**: Outputs: `5 3 2 4 7 6 8`
 
+3. **Flipping**: The tree is flipped to become:
 ```
-Pre-order Traversal of BST:
-10 5 3 7 15 13 17 
-Pre-order Traversal after filling flipped BST:
-10 15 17 13 5 7 3 
+        5
+      /   \
+     7     3
+    / \   / \
+   8   6 4   2
 ```
 
-### Conclusion
+4. **Pre-order Traversal After Flipping**: Outputs: `5 7 8 6 3 4 2`
 
-The provided implementation efficiently constructs a Binary Search Tree, performs insertions, allows traversal, flips the tree, and creates a new flipped BST. This report highlights each component of the code, providing a clear understanding of how the Binary Search Tree operates in Java.
+5. **Filling**: The flipped tree is filled with the sorted keys, resulting in:
+```
+        4
+      /   \
+     6     5
+    / \   / \
+   7   8 2   3
+```
+
+6. **Pre-order Traversal After Filling**: Outputs: `4 6 7 8 5 2 3`
+
+## Conclusion
+The provided Java implementation of a Binary Search Tree is a clear demonstration of fundamental data structure operations including insertion, traversal, flipping, and filling. The code is modular and follows good programming practices, making it easy to understand and maintain. This report details each component of the code, illustrating its functionality with explanations and examples, providing a comprehensive understanding of the BST operations.

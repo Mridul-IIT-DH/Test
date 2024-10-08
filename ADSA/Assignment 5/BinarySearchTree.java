@@ -1,109 +1,121 @@
+import java.util.*;
+
 class Node {
-  int data;
+  int val;
   Node left, right;
 
-  public Node(int item) {
-    data = item;
+  public Node(int key) {
+    val = key;
     left = right = null;
   }
 }
 
-public class BinarySearchTree {
+class BinarySearchTree {
   Node root;
 
-  // Insert operation
+  // Insert a key into the tree
   public void insert(int key) {
-    root = insertRec(root, key);
-  }
-
-  private Node insertRec(Node root, int key) {
     if (root == null) {
       root = new Node(key);
-      return root;
+    } else {
+      insertRec(root, key);
     }
-    if (key < root.data) {
-      root.left = insertRec(root.left, key);
-    } else if (key > root.data) {
-      root.right = insertRec(root.right, key);
-    }
-    return root;
   }
 
-  // Pre-order traversal
+  private void insertRec(Node currentNode, int key) {
+    if (key < currentNode.val) {
+      if (currentNode.left == null) {
+        currentNode.left = new Node(key);
+      } else {
+        insertRec(currentNode.left, key);
+      }
+    } else if (key > currentNode.val) {
+      if (currentNode.right == null) {
+        currentNode.right = new Node(key);
+      } else {
+        insertRec(currentNode.right, key);
+      }
+    }
+  }
+
+  // Pre-order Traversal (Root, Left, Right)
   public void preorderTraversal(Node node) {
     if (node != null) {
-      System.out.print(node.data + " ");
+      System.out.print(node.val + " ");
       preorderTraversal(node.left);
       preorderTraversal(node.right);
     }
   }
 
-  // Flip operation
+  // Flip the tree (swap left and right children for each node)
   public void flip(Node node) {
-    if (node == null)
+    if (node != null) {
+      Node temp = node.left;
+      node.left = node.right;
+      node.right = temp;
+      flip(node.left);
+      flip(node.right);
+    }
+  }
+
+  // Fill the flipped tree with sorted keys in in-order manner
+  public void fillInOrder(Node node, List<Integer> keys) {
+    if (node == null) {
       return;
-
-    // Swap left and right children
-    Node temp = node.left;
-    node.left = node.right;
-    node.right = temp;
-
-    flip(node.left);
-    flip(node.right);
+    }
+    fillInOrder(node.left, keys); // Traverse the left subtree
+    node.val = keys.remove(0); // Replace the current node's value with the next sorted key
+    fillInOrder(node.right, keys); // Traverse the right subtree
   }
 
-  // Fill operation that creates a new tree from the keys
-  public void fillFlippedBST(BinarySearchTree flippedBst, int[] keys) {
-    for (int key : keys) {
-      flippedBst.insert(key); // Insert into the flipped tree
-    }
-  }
-
-  // Create a new flipped BST with the given keys
-  public BinarySearchTree createFlippedBST(int[] keys) {
-    BinarySearchTree flippedBst = new BinarySearchTree();
-    for (int key : keys) {
-      flippedBst.insert(key);
-    }
-    flippedBst.flip(flippedBst.root); // Flip it after inserting
-    return flippedBst;
+  // Helper function to fill the tree after flipping
+  public void fill(List<Integer> keys) {
+    Collections.sort(keys); // Sort the keys before filling in in-order traversal
+    fillInOrder(root, keys);
   }
 
   public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+
+    // 1. Take input from the user
+    System.out.print("Enter the keys (separated by space): ");
+    String userInput = scanner.nextLine();
+
+    // 2. Split the input string by spaces and convert it to a list of integers
+    String[] inputKeys = userInput.split(" ");
+    List<Integer> keys = new ArrayList<>();
+    for (String key : inputKeys) {
+      keys.add(Integer.parseInt(key));
+    }
+
+    // 3. Create a Binary Search Tree and insert the keys
     BinarySearchTree bst = new BinarySearchTree();
-
-    // Check if keys are provided as command-line arguments
-    if (args.length == 0) {
-      System.out.println("Please provide distinct keys as command-line arguments.");
-      return;
+    for (int key : keys) {
+      bst.insert(key);
     }
 
-    // Step 1: Build BST from given keys
-    int[] keys = new int[args.length];
-    for (int i = 0; i < args.length; i++) {
-      try {
-        keys[i] = Integer.parseInt(args[i]);
-        bst.insert(keys[i]);
-      } catch (NumberFormatException e) {
-        System.out.println("Invalid input: " + args[i] + " is not an integer.");
-        return;
-      }
-    }
-
-    // Step 2: Pre-order Traversal of the original BST
-    System.out.println("Pre-order Traversal of BST:");
+    // 4. Print pre-order traversal before flipping
+    System.out.println("Pre-order traversal before flipping:");
     bst.preorderTraversal(bst.root);
     System.out.println();
 
-    // Step 3: Flip the BST
+    // 5. Flip the BST
     bst.flip(bst.root);
 
-    // Step 4: Create a new flipped BST and fill it with the same keys
-    BinarySearchTree flippedBst = bst.createFlippedBST(keys);
-
-    // Display the pre-order traversal of the flipped BST
-    System.out.println("Pre-order Traversal after filling flipped BST:");
-    flippedBst.preorderTraversal(flippedBst.root);
+    // 6. Print pre-order traversal after flipping
+    System.out.println("Pre-order traversal after flipping:");
+    bst.preorderTraversal(bst.root);
     System.out.println();
+
+    // 7. Fill the flipped tree with the original keys in sorted order (in-order
+    // filling)
+    bst.fill(keys);
+
+    // 8. Print pre-order traversal after filling the flipped tree
+    System.out.println("Pre-order traversal after filling the flipped BST with sorted keys:");
+    bst.preorderTraversal(bst.root);
+    System.out.println();
+
+    scanner.close();
   }
 }
