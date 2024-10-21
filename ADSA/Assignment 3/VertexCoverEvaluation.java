@@ -2,7 +2,7 @@
 import java.io.*;
 import java.util.*;
 
-public class VertexCover {
+public class VertexCoverEvaluation {
 
 public static void main(String[] args) {
     if (args.length != 2) {
@@ -28,9 +28,7 @@ public static void main(String[] args) {
 
     private static Graph readGraph(String filePath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String[] firstLine = br.readLine().trim().split(" ");
-            int n = Integer.parseInt(firstLine[0]);
-            int m = Integer.parseInt(firstLine[1]);
+            br.readLine().trim().split(" ");
             List<int[]> edges = new ArrayList<>();
 
             String line;
