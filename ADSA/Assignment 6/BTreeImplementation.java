@@ -133,7 +133,7 @@ class BTree {
 }
 
 // Main class to test the B-tree implementation
-public class BTreeImplemetation {
+public class BTreeImplementation {
 
     public static void main(String[] args) {
         int[] keys = {10, 20, 5, 6}; // Replace with your pre-order keys
