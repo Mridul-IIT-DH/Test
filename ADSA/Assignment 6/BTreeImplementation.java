@@ -1,176 +1,203 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
-// Class representing a node in the B-tree
-class BTreeNode {
-    int t; // Minimum degree
-    List<Integer> keys; // List of keys
-    List<BTreeNode> children; // List of children
-    boolean leaf; // True if leaf node
+class NodeOfBTree {
+    List<Integer> keys;
+    List<NodeOfBTree> child;
+    boolean Leaf;
 
-    BTreeNode(int t, boolean leaf) {
-        this.t = t;
-        this.leaf = leaf;
+    NodeOfBTree(boolean Leaf) {
+        this.Leaf = Leaf;
         this.keys = new ArrayList<>();
-        this.children = new ArrayList<>();
+        this.child = new ArrayList<>();
     }
 }
 
-// Class representing the B-tree itself
-class BTree {
-    private BTreeNode root; // Root node of the B-tree
-    private int t; // Minimum degree
-
-    public BTree(int t) {
-        this.root = null;
-        this.t = t;
-    }
-
-    // Insert a key into the B-tree
-    public void insert(int key) {
-        if (root == null) {
-            root = new BTreeNode(t, true);
-            root.keys.add(key);
-        } else {
-            if (root.keys.size() == 2 * t - 1) {
-                BTreeNode newRoot = new BTreeNode(t, false);
-                newRoot.children.add(root);
-                splitChild(newRoot, 0);
-                root = newRoot;
-                insertNonFull(root, key);
-            } else {
-                insertNonFull(root, key);
-            }
-        }
-    }
-
-    // Insert a key into a non-full node
-    private void insertNonFull(BTreeNode node, int key) {
-        int i = node.keys.size() - 1;
-
-        if (node.leaf) {
-            node.keys.add(0); // Placeholder for new key
-            while (i >= 0 && key < node.keys.get(i)) {
-                node.keys.set(i + 1, node.keys.get(i));
-                i--;
-            }
-            node.keys.set(i + 1, key);
-        } else {
-            while (i >= 0 && key < node.keys.get(i)) {
-                i--;
-            }
-            i++;
-            if (node.children.get(i).keys.size() == 2 * t - 1) {
-                splitChild(node, i);
-                if (key > node.keys.get(i)) {
-                    i++;
-                }
-            }
-            insertNonFull(node.children.get(i), key);
-        }
-    }
-
-    // Split a child of a given parent node
-    private void splitChild(BTreeNode parent, int index) {
-        BTreeNode fullChild = parent.children.get(index);
-        BTreeNode newChild = new BTreeNode(t, fullChild.leaf);
-
-        for (int j = 0; j < t - 1; j++) {
-            newChild.keys.add(fullChild.keys.remove(t)); // Move last t-1 keys to new child
-        }
-
-        if (!fullChild.leaf) {
-            for (int j = 0; j < t; j++) {
-                newChild.children.add(fullChild.children.remove(t)); // Move last t children to new child
-            }
-        }
-
-        parent.children.add(index + 1, newChild); // Add new child to parent
-        parent.keys.add(index, fullChild.keys.remove(t - 1)); // Move median key up to parent
-    }
-
-    // Perform post-order traversal of the tree
-    public void postOrderTraversal(BTreeNode node) {
-        if (node != null) {
-            for (BTreeNode child : node.children) {
-                postOrderTraversal(child);
-            }
-            System.out.print(node.keys + " ");
-        }
-    }
-
-    // Check if all leaves are at the same depth
-    public void checkLeafDepthConsistency(BTreeNode node, int depth, List<Integer> leafDepths) {
-        if (node != null) {
-            if (node.leaf) {
-                leafDepths.add(depth);
-            } else {
-                for (BTreeNode child : node.children) {
-                    checkLeafDepthConsistency(child, depth + 1, leafDepths);
-                }
-            }
-        }
-    }
-
-    // Check that each non-leaf node has between t-1 and 2t-1 keys
-    public List<List<Integer>> checkKeyCount(BTreeNode node) {
-        List<List<Integer>> violations = new ArrayList<>();
-        
-        if (node != null) {
-            if (node.keys.size() < t - 1 || node.keys.size() > 2 * t - 1) {
-                violations.add(new ArrayList<>(node.keys));
-            }
-            
-            for (BTreeNode child : node.children) {
-                violations.addAll(checkKeyCount(child));
-            }
-        }
-        
-        return violations;
-    }
-
-    public BTreeNode getRoot() { return root; } // Get root of the tree
-}
-
-// Main class to test the B-tree implementation
 public class BTreeImplementation {
+    static int currentIndex = 0;
+    static final int MIN_DEGREE = 2; // Minimum degree
 
     public static void main(String[] args) {
-        int[] keys = {10, 20, 5, 6}; // Replace with your pre-order keys
-        
-        // Initialize a B-tree with minimum degree t=2 
-        BTree btree = new BTree(2);
+        // Directly defining the preorder traversal in the code
+        List<Integer> preorderKeys = List.of(10, 20, 1, 2, 3, 4, 11, 12, 21, 22);
 
-        System.out.println("Inserting keys into the B-tree:");
-        
-        // Insert each key into the B-tree 
-        for (int key : keys) {
-            btree.insert(key);
-            System.out.println("Inserted: " + key);
+        currentIndex = 0;
+        NodeOfBTree rootNode = createBTree(preorderKeys, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
+
+        if (rootNode == null) {
+            System.out.println("Violation occurred during constructing the tree.");
+            return;
         }
 
-        System.out.println("\nPost-order Traversal:");
-        btree.postOrderTraversal(btree.getRoot());
-        
-        System.out.println("\n\nChecking Leaf Depth Consistency:");
-        List<Integer> leafDepths = new ArrayList<>();
-        btree.checkLeafDepthConsistency(btree.getRoot(), 0, leafDepths);
-        
-        System.out.println("Leaf depths: " + leafDepths);
-        
-        if (leafDepths.size() > 1) {
-            System.out.println("Non-conforming nodes found at depths: " + leafDepths);
-        } else {
-            System.out.println("All leaves are at the same depth.");
+        System.out.println("Post-order traversal:");
+        printPostOrder(rootNode);
+        System.out.println();
+
+        // Collect leaves and their depths
+        List<LeafDepth> leafDepths = new ArrayList<>();
+        recordLeafDepths(rootNode, 0, leafDepths);
+
+        // Identify unique depths
+        Set<Integer> uniqueDepths = new HashSet<>();
+        for (LeafDepth leaf : leafDepths) {
+            uniqueDepths.add(leaf.depth);
         }
 
-        System.out.println("\nChecking Key Count in Nodes:");
-        List<List<Integer>> violatingNodes = btree.checkKeyCount(btree.getRoot());
-        
-        if (!violatingNodes.isEmpty()) {
-            System.out.println("Nodes violating key count property: " + violatingNodes);
+        // Check if all leaves are at the same depth
+        if (uniqueDepths.size() == 1) {
+            System.out.println("All leaf nodes are at the same depth.");
         } else {
-            System.out.println("All nodes conform to the key count property.");
+            System.out.println("Leaf are at different depths.");
+            System.out.println("Leaf and their depths:");
+            for (LeafDepth leaf : leafDepths) {
+                System.out.print("Leaf node at depth " + leaf.depth + ": ");
+                for (int i = 0; i < leaf.node.keys.size(); i++) {
+                    System.out.print(leaf.node.keys.get(i));
+                    if (i != leaf.node.keys.size() - 1) System.out.print(" ");
+                }
+                System.out.println(",");
+            }
+        }
+
+        // Check for nodes with invalid number of keys
+        List<NodeOfBTree> invalidNodes = new ArrayList<>();
+        boolean hasKeyViolation = false;
+        validateNodeKeys(rootNode, rootNode, hasKeyViolation, invalidNodes);
+
+        if (hasKeyViolation) {
+            System.out.println("Some nodes have invalid number of keys.");
+            System.out.println("Nodes violating key constraints:");
+            for (NodeOfBTree node : invalidNodes) {
+                System.out.print("Node: ");
+                for (int i = 0; i < node.keys.size(); i++) {
+                    System.out.print(node.keys.get(i));
+                    if (i != node.keys.size() - 1) System.out.print(" ");
+                }
+                System.out.println(",");
+            }
+        } else {
+            System.out.println("All nodes have valid number of keys.");
+        }
+    }
+
+    static NodeOfBTree createBTree(List<Integer> preorderKeys, int minKey, int maxKey, boolean isRoot) {
+        if (currentIndex >= preorderKeys.size()) return null;
+
+        NodeOfBTree newNode = new NodeOfBTree(true);
+
+        // Add keys to the node
+        while (currentIndex < preorderKeys.size() && newNode.keys.size() < 2 * MIN_DEGREE - 1) {
+            int key = preorderKeys.get(currentIndex);
+
+            // If the key is out of the current node's key range, break
+            if (key < minKey || key > maxKey) {
+                break;
+            }
+
+            // Add key to the node
+            newNode.keys.add(key);
+            currentIndex++;
+
+            // If the next key is less than the current key, it indicates the start of child nodes
+            if (currentIndex < preorderKeys.size() && preorderKeys.get(currentIndex) < newNode.keys.get(newNode.keys.size() - 1)) {
+                break;
+            }
+        }
+
+        // Decide whether to create child nodes
+        if (newNode.keys.size() >= MIN_DEGREE - 1 && currentIndex < preorderKeys.size() && preorderKeys.get(currentIndex) < newNode.keys.get(newNode.keys.size() - 1)) {
+            newNode.Leaf = false;
+            int numberOfChildren = newNode.keys.size() + 1;
+
+            // Build child nodes
+            for (int i = 0; i < numberOfChildren; ++i) {
+                int childMaxKey = (i < newNode.keys.size()) ? newNode.keys.get(i) : maxKey;
+                NodeOfBTree childNode = createBTree(preorderKeys, minKey, childMaxKey, false);
+                newNode.child.add(childNode);
+                minKey = childMaxKey;
+
+                // If child is null, it means there was a violation in child construction
+                if (childNode == null) {
+                    System.out.println("Violation occurred during tree construction.");
+                    return null;
+                }
+            }
+
+            // Check if the number of non-null child is correct
+            int actualChildrenCount = 0;
+            for (NodeOfBTree child : newNode.child) {
+                if (child != null) actualChildrenCount++;
+            }
+            if (actualChildrenCount < numberOfChildren) {
+                System.out.print("Node with keys ");
+                for (int k : newNode.keys) {
+                    System.out.print(k + " ");
+                }
+                System.out.println("has fewer child than expected.");
+                return null;
+            }
+        }
+
+        // Check for underflow in non-root nodes
+        if (!isRoot && newNode.keys.size() < MIN_DEGREE - 1) {
+            System.out.println("Node underflow");
+            return null;
+        }
+
+        return newNode;
+    }
+
+    static void printPostOrder(NodeOfBTree node) {
+        if (node == null) return;
+
+        // Traverse all child first
+        for (NodeOfBTree child : node.child) {
+            printPostOrder(child);
+        }
+
+        // Then print all the keys of the node together
+        System.out.print(" ");
+        for (int i = 0; i < node.keys.size(); i++) {
+            System.out.print(node.keys.get(i));
+            if (i != node.keys.size() - 1) {
+                System.out.print(" ");
+            }
+        }
+        System.out.print(", ");
+    }
+
+    static void recordLeafDepths(NodeOfBTree node, int depth, List<LeafDepth> leafDepths) {
+        if (node == null) return;
+        if (node.Leaf) {
+            leafDepths.add(new LeafDepth(node, depth));
+        }
+        for (NodeOfBTree child : node.child) {
+            recordLeafDepths(child, depth + 1, leafDepths);
+        }
+    }
+
+    static void validateNodeKeys(NodeOfBTree node, NodeOfBTree root, boolean hasKeyViolation, List<NodeOfBTree> invalidNodes) {
+        if (node == null) return;
+        int numberOfKeys = node.keys.size();
+        if ((node != root && (numberOfKeys < MIN_DEGREE - 1 || numberOfKeys > 2 * MIN_DEGREE - 1)) || (node == root && numberOfKeys > 2 * MIN_DEGREE - 1)) {
+            hasKeyViolation = true;
+            invalidNodes.add(node);
+        }
+        for (NodeOfBTree child : node.child) {
+            validateNodeKeys(child, root, hasKeyViolation, invalidNodes);
+        }
+    }
+
+    // Helper class to hold node and depth pairs
+    static class LeafDepth {
+        NodeOfBTree node;
+        int depth;
+
+        LeafDepth(NodeOfBTree node, int depth) {
+            this.node = node;
+            this.depth = depth;
         }
     }
 }
