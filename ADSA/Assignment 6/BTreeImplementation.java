@@ -10,7 +10,18 @@ class NodeOfBTree {
 
     NodeOfBTree(boolean Leaf) {
         this.Leaf = Leaf;
+import java.util.Set;
+import java.util.HashSet;
+
+class NodeOfBTree {
+    List<Integer> keys;
+    List<NodeOfBTree> child;
+    boolean Leaf;
+
+    NodeOfBTree(boolean Leaf) {
+        this.Leaf = Leaf;
         this.keys = new ArrayList<>();
+        this.child = new ArrayList<>();
         this.child = new ArrayList<>();
     }
 }
@@ -58,6 +69,15 @@ public class BTreeImplementation {
                     if (i != leaf.node.keys.size() - 1) System.out.print(" ");
                 }
                 System.out.println(",");
+            System.out.println("Leaf are at different depths.");
+            System.out.println("Leaf and their depths:");
+            for (LeafDepth leaf : leafDepths) {
+                System.out.print("Leaf node at depth " + leaf.depth + ": ");
+                for (int i = 0; i < leaf.node.keys.size(); i++) {
+                    System.out.print(leaf.node.keys.get(i));
+                    if (i != leaf.node.keys.size() - 1) System.out.print(" ");
+                }
+                System.out.println(",");
             }
         }
 
@@ -66,6 +86,22 @@ public class BTreeImplementation {
         boolean hasKeyViolation = false;
         validateNodeKeys(rootNode, rootNode, hasKeyViolation, invalidNodes);
 
+        // Check for nodes with invalid number of keys
+        List<NodeOfBTree> invalidNodes = new ArrayList<>();
+        boolean hasKeyViolation = false;
+        validateNodeKeys(rootNode, rootNode, hasKeyViolation, invalidNodes);
+
+        if (hasKeyViolation) {
+            System.out.println("Some nodes have invalid number of keys.");
+            System.out.println("Nodes violating key constraints:");
+            for (NodeOfBTree node : invalidNodes) {
+                System.out.print("Node: ");
+                for (int i = 0; i < node.keys.size(); i++) {
+                    System.out.print(node.keys.get(i));
+                    if (i != node.keys.size() - 1) System.out.print(" ");
+                }
+                System.out.println(",");
+            }
         if (hasKeyViolation) {
             System.out.println("Some nodes have invalid number of keys.");
             System.out.println("Nodes violating key constraints:");
