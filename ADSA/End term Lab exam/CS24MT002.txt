@@ -1,0 +1,7 @@
+a. g++ OptimalBST.cpp; ./a.out <inputFilePath>
+
+b. Tasks completed: 1, 2
+
+c. Task 3 and 4 are partially done. I am unable to print the value of preorder traversal and the value of height.
+
+d. No
